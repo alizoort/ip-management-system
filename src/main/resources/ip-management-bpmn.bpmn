@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1ifz2ra" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.10.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.2.0">
+  <bpmn:process id="IPManagementBusinessProcess" name="Intellectual Property BPMN" isExecutable="true">
+    <bpmn:extensionElements>
+      <zeebe:properties />
+    </bpmn:extensionElements>
+    <bpmn:laneSet id="LaneSet_0m2i0j5" />
+    <bpmn:startEvent id="PostLoginStartEvent" name="Post Login Start Event">
+      <bpmn:extensionElements>
+        <zeebe:properties />
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_12fyddm</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="FillPersonnelInfo" name="Fill Personnel Info">
+      <bpmn:incoming>Flow_12fyddm</bpmn:incoming>
+      <bpmn:outgoing>Flow_04ux7we</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="NationalityChecked" name="Nationality Checker">
+      <bpmn:incoming>Flow_04ux7we</bpmn:incoming>
+      <bpmn:outgoing>LebaneseSequence</bpmn:outgoing>
+      <bpmn:outgoing>ForeignSequence</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="EndForeignBranch" name="End">
+      <bpmn:incoming>ForeignSequence</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="EndLebaneseBranch" name="End Lebanese Branch">
+      <bpmn:incoming>Flow_1yll1ou</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="FillNativeInformation" name="Fill Native Information">
+      <bpmn:extensionElements />
+      <bpmn:incoming>LebaneseSequence</bpmn:incoming>
+      <bpmn:outgoing>Flow_1yll1ou</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_12fyddm" sourceRef="PostLoginStartEvent" targetRef="FillPersonnelInfo" />
+    <bpmn:sequenceFlow id="Flow_04ux7we" sourceRef="FillPersonnelInfo" targetRef="NationalityChecked" />
+    <bpmn:sequenceFlow id="LebaneseSequence" name="Lebanese Sequence" sourceRef="NationalityChecked" targetRef="FillNativeInformation">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=nationality="lebanese"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="ForeignSequence" name="Foreign Sequence" sourceRef="NationalityChecked" targetRef="EndForeignBranch">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=nationality="foreign"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1yll1ou" sourceRef="FillNativeInformation" targetRef="EndLebaneseBranch" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="IPManagementBusinessProcess">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="PostLoginStartEvent">
+        <dc:Bounds x="179" y="169" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="170" y="212" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_13pjx73_di" bpmnElement="FillPersonnelInfo">
+        <dc:Bounds x="270" y="147" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_16gg7wn_di" bpmnElement="NationalityChecked" isMarkerVisible="true">
+        <dc:Bounds x="435" y="162" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="516" y="177" width="52" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_19vnk21_di" bpmnElement="EndForeignBranch">
+        <dc:Bounds x="682" y="282" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="690" y="325" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_05reb5t_di" bpmnElement="EndLebaneseBranch">
+        <dc:Bounds x="682" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="666" y="145" width="72" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1poxq3e_di" bpmnElement="FillNativeInformation">
+        <dc:Bounds x="530" y="80" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_12fyddm_di" bpmnElement="Flow_12fyddm">
+        <di:waypoint x="215" y="187" />
+        <di:waypoint x="270" y="187" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04ux7we_di" bpmnElement="Flow_04ux7we">
+        <di:waypoint x="370" y="187" />
+        <di:waypoint x="435" y="187" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0clcori_di" bpmnElement="LebaneseSequence">
+        <di:waypoint x="460" y="162" />
+        <di:waypoint x="460" y="120" />
+        <di:waypoint x="530" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="405" y="106" width="50" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ndyfi9_di" bpmnElement="ForeignSequence">
+        <di:waypoint x="460" y="212" />
+        <di:waypoint x="460" y="300" />
+        <di:waypoint x="682" y="300" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="495" y="253" width="50" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1yll1ou_di" bpmnElement="Flow_1yll1ou">
+        <di:waypoint x="630" y="120" />
+        <di:waypoint x="682" y="120" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
