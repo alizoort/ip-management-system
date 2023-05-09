@@ -18,8 +18,6 @@ import java.util.Map;
 @Deployment(resources="classpath:ip-management-bpmn.bpmn")
 public class CamundaPocApplication implements CommandLineRunner {
     private final static Logger LOG = LoggerFactory.getLogger(CamundaPocApplication.class);
-    @Autowired
-    private ZeebeClientLifecycle client;
     public static void main(String[] args) {
         SpringApplication.run(CamundaPocApplication.class, args);
     }
