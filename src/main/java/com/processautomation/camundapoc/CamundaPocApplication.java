@@ -25,16 +25,6 @@ public class CamundaPocApplication implements CommandLineRunner {
     }
     @Override
     public void run(final String... args) throws Exception {
-        final ProcessInstanceEvent event =
-                client
-                        .newCreateInstanceCommand()
-                        .bpmnProcessId("IPManagementBusinessProcess")
-                        .latestVersion()
-                        .variables(Map.of("message_content","Hello From Our Automated IP System"))
-                        .send()
-                        .join();
-        LOG.info("Started instance for processDefinitionKey='{}', bpmnProcessId='{}', version='{}' with processInstanceKey='{}'",
-                event.getProcessDefinitionKey(), event.getBpmnProcessId(), event.getVersion(), event.getProcessInstanceKey());
     }
 
 }
