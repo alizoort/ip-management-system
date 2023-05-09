@@ -21,6 +21,7 @@ public class CamundaService {
 
     public ProcessInstanceEvent initiateBpmnInstance(InitiationRequest initiationRequest){
 
+
      return     client.newCreateInstanceCommand()
                 .bpmnProcessId(initiationRequest.bpmnProcessId)
                 .latestVersion()
