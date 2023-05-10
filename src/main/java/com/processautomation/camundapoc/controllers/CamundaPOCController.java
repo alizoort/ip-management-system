@@ -6,11 +6,6 @@ import com.processautomation.camundapoc.payload.InitiationRequest;
 import com.processautomation.camundapoc.payload.MessageResponse;
 import com.processautomation.camundapoc.services.CamundaService;
 import io.camunda.operate.exception.OperateException;
-import io.camunda.tasklist.CamundaTaskListClient;
-import io.camunda.tasklist.auth.SelfManagedAuthentication;
-import io.camunda.tasklist.dto.TaskList;
-import io.camunda.tasklist.dto.TaskSearch;
-import io.camunda.tasklist.dto.TaskState;
 import io.camunda.tasklist.exception.TaskListException;
 import io.camunda.zeebe.client.api.response.ProcessInstanceEvent;
 import jakarta.validation.Valid;
@@ -20,12 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 
 @RestController @RequestMapping("ip-management-system")

@@ -8,11 +8,8 @@ import io.camunda.operate.dto.ProcessInstanceState;
 import io.camunda.operate.exception.OperateException;
 import io.camunda.operate.search.ProcessInstanceFilter;
 import io.camunda.operate.search.SearchQuery;
-import io.camunda.operate.search.Sort;
-import io.camunda.operate.search.SortOrder;
 import io.camunda.tasklist.CamundaTaskListClient;
 import io.camunda.tasklist.auth.SelfManagedAuthentication;
-import io.camunda.tasklist.auth.SimpleAuthentication;
 import io.camunda.tasklist.dto.*;
 import io.camunda.tasklist.exception.TaskListException;
 import io.camunda.zeebe.client.api.response.ProcessInstanceEvent;
@@ -47,8 +44,12 @@ public class CamundaService {
 
         for(Task taskElement : tasksFromInstance){
             for(Variable variable : taskElement.getVariables()){
-                if(variable.getName().equals("assignedBusinessUser") && ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername().equals(variable.getValue())){
-                    tasklistClient.completeTask(taskElement.getId(),new HashMap<>());
+                if(completeRequest.taskId.equals(taskElement.getTaskDefinitionId()) && variable.getName().equals("assignedBusinessUser") && ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername().equals(variable.getValue())){
+                    HashMap variablesMap = new HashMap<>();
+                    completeRequest.variables.forEach( variableInstance -> {
+                        variablesMap.put(variableInstance.get("name"),variableInstance.get("value"));
+                    });
+                    tasklistClient.completeTask(taskElement.getId(),variablesMap);
                 }
             }
         }
