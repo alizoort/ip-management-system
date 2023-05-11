@@ -8,6 +8,7 @@ import io.camunda.operate.dto.ProcessInstanceState;
 import io.camunda.operate.exception.OperateException;
 import io.camunda.operate.search.ProcessInstanceFilter;
 import io.camunda.operate.search.SearchQuery;
+import io.camunda.operate.search.VariableFilter;
 import io.camunda.tasklist.CamundaTaskListClient;
 import io.camunda.tasklist.auth.SelfManagedAuthentication;
 import io.camunda.tasklist.dto.*;
@@ -22,7 +23,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CamundaService {
@@ -30,6 +30,7 @@ public class CamundaService {
     private ZeebeClientLifecycle client;
     @Autowired
     private Environment env;
+    //Create a method that takes bpmn and username and gives -> the current camunda screen (This should be put insde redirection variable)
     public void completeBpmnInstance(CompleteBpmnInstanceRequest completeRequest) throws TaskListException , OperateException {
         SelfManagedAuthentication selfManagedAuthentication = new SelfManagedAuthentication(env.getProperty("ipManagementSystem.app.clientId"),env.getProperty("ipManagementSystem.app.clientSecret"));
         CamundaTaskListClient tasklistClient = new CamundaTaskListClient.Builder().taskListUrl("http://localhost:8082").shouldReturnVariables().authentication(selfManagedAuthentication).build();
@@ -37,11 +38,19 @@ public class CamundaService {
                 .operateUrl("http://localhost:8081/").build();
         ProcessInstanceFilter instanceFilter = new ProcessInstanceFilter.Builder().bpmnProcessId("IPManagementBusinessProcess").state(ProcessInstanceState.ACTIVE).build();
         SearchQuery instanceQuery = new SearchQuery.Builder().filter(instanceFilter).size(20).build();
+        HashMap screenTaskAssociation = new HashMap<Object,Object>(){{
+            put("FillPersonnelInfo","https://pabudtywntpghop.form.io/ipsimpleform");
+            put("FillNativeInformation","https://pabudtywntpghop.form.io/nativeinformation");
+        }
+        };
         List<ProcessInstance> list = operateClient.searchProcessInstances(instanceQuery);
         ProcessInstance processInstance = list.get(0);
         TaskSearch ts = new TaskSearch().setState(TaskState.CREATED).setWithVariables(true).setProcessDefinitionId(processInstance.getProcessDefinitionKey().toString());
         TaskList tasksFromInstance = tasklistClient.getTasks(ts);
-
+        VariableFilter variableFilter = new VariableFilter.Builder().processInstanceKey(processInstance.getKey()).build();
+        SearchQuery varQuery = new SearchQuery.Builder().filter(variableFilter).size(20).build();
+        List<io.camunda.operate.dto.Variable> variables = operateClient.searchVariables(varQuery);
+        variables.stream().filter(variable-> variable.getName().equals("taskScreenAssociation")).findFirst().ifPresent(variable -> System.out.println("VARIABLE NAME "+variable.getName()));
         for(Task taskElement : tasksFromInstance){
             for(Variable variable : taskElement.getVariables()){
                 if(completeRequest.taskId.equals(taskElement.getTaskDefinitionId()) && variable.getName().equals("assignedBusinessUser") && ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername().equals(variable.getValue())){
@@ -49,6 +58,7 @@ public class CamundaService {
                     completeRequest.variables.forEach( variableInstance -> {
                         variablesMap.put(variableInstance.get("name"),variableInstance.get("value"));
                     });
+                    variablesMap.put("currentScreenUrl",screenTaskAssociation.get(completeRequest.bpmnProcessId));
                     tasklistClient.completeTask(taskElement.getId(),variablesMap);
                 }
             }
@@ -56,14 +66,19 @@ public class CamundaService {
     }
 
     public ProcessInstanceEvent initiateBpmnInstance(InitiationRequest initiationRequest){
-
-
+        HashMap screenTaskAssociation = new HashMap<Object,Object>(){{
+            put("FillPersonnelInfo","https://pabudtywntpghop.form.io/ipsimpleform");
+            put("FillNativeInformation","https://pabudtywntpghop.form.io/nativeinformation");
+        }
+        };
      return     client.newCreateInstanceCommand()
                 .bpmnProcessId(initiationRequest.bpmnProcessId)
                 .latestVersion()
                 .variables( new HashMap<Object,Object>(){{
                                 put("assignedBusinessUser",((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername());
                                 put("stakeholders",initiationRequest.stakeholders);
+                                put("taskScreenAssociation",screenTaskAssociation);
+                                put("currentScreenUrl",screenTaskAssociation.get("FillPersonnelInfo"));
                             }}
                 ).send().join();
     }
