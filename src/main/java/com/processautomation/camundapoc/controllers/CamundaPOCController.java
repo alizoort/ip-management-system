@@ -44,7 +44,6 @@ public class CamundaPOCController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> currentCamundaScreen(@Valid @RequestBody GetCurrentTaskScreenUrlDTO currentScreenUrl) throws TaskListException, OperateException {
        GetCurrentTaskScreenResponseDTO currentTaskScreen = camundaService.retrieveCurrentTaskScreenUrl(currentScreenUrl);
-        System.out.println("CURRENT TASK SCREEN "+currentTaskScreen);
         return ResponseEntity.ok(new HashMap<Object,Object>(){{
             put("currentTaskScreen",currentTaskScreen.currentTaskScreen);
             put("currentTaskId",currentTaskScreen.taskId);

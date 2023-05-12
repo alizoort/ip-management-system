@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class CamundaService {
@@ -74,7 +73,6 @@ public class CamundaService {
         VariableFilter variableFilter = new VariableFilter.Builder().processInstanceKey(processInstance.getKey()).build();
         SearchQuery varQuery = new SearchQuery.Builder().filter(variableFilter).size(20).build();
         List<io.camunda.operate.dto.Variable> variables = operateClient.searchVariables(varQuery);
-        variables.stream().filter(variable-> variable.getName().equals("taskScreenAssociation")).findFirst().ifPresent(variable -> System.out.println("VARIABLE NAME "+variable.getName()));
         for(Task taskElement : tasksFromInstance){
             for(Variable variable : taskElement.getVariables()){
                 if(completeRequest.taskId.equals(taskElement.getTaskDefinitionId()) && variable.getName().equals("assignedBusinessUser") && ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername().equals(variable.getValue())){
@@ -84,9 +82,11 @@ public class CamundaService {
                     });
                     variablesMap.put("currentScreenUrl",screenTaskAssociation.get(completeRequest.taskId));
                     tasklistClient.completeTask(taskElement.getId(),variablesMap);
+                    return;
                 }
             }
         }
+        throw new TaskListException();
     }
 
     public ProcessInstanceEvent initiateBpmnInstance(InitiationRequest initiationRequest){
