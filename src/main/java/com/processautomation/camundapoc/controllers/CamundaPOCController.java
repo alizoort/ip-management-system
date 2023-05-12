@@ -2,6 +2,8 @@ package com.processautomation.camundapoc.controllers;
 
 import com.processautomation.camundapoc.CamundaPocApplication;
 import com.processautomation.camundapoc.models.CompleteBpmnInstanceRequest;
+import com.processautomation.camundapoc.models.GetCurrentTaskScreenResponseDTO;
+import com.processautomation.camundapoc.models.GetCurrentTaskScreenUrlDTO;
 import com.processautomation.camundapoc.payload.InitiationRequest;
 import com.processautomation.camundapoc.payload.MessageResponse;
 import com.processautomation.camundapoc.services.CamundaService;
@@ -16,7 +18,9 @@ import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController @RequestMapping("ip-management-system")
 public class CamundaPOCController {
     private final static Logger LOG = LoggerFactory.getLogger(CamundaPocApplication.class);
@@ -35,6 +39,16 @@ public class CamundaPOCController {
                 LOG.info("Started instance for processDefinitionKey='{}', bpmnProcessId='{}', version='{}' with processInstanceKey='{}'",
                 event.getProcessDefinitionKey(), event.getBpmnProcessId(), event.getVersion(), event.getProcessInstanceKey());
            return ResponseEntity.ok(new MessageResponse("Process Has Been Instantiated"));
+    }
+    @PostMapping("/currentScreenUrl")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> currentCamundaScreen(@Valid @RequestBody GetCurrentTaskScreenUrlDTO currentScreenUrl) throws TaskListException, OperateException {
+       GetCurrentTaskScreenResponseDTO currentTaskScreen = camundaService.retrieveCurrentTaskScreenUrl(currentScreenUrl);
+        System.out.println("CURRENT TASK SCREEN "+currentTaskScreen);
+        return ResponseEntity.ok(new HashMap<Object,Object>(){{
+            put("currentTaskScreen",currentTaskScreen.currentTaskScreen);
+            put("currentTaskId",currentTaskScreen.taskId);
+        }});
     }
 
 }
