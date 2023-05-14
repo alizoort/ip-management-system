@@ -1,11 +1,12 @@
 package com.processautomation.camundapoc.controllers;
 
 import com.processautomation.camundapoc.CamundaPocApplication;
-import com.processautomation.camundapoc.models.CompleteBpmnInstanceRequest;
-import com.processautomation.camundapoc.models.GetCurrentTaskScreenResponseDTO;
-import com.processautomation.camundapoc.models.GetCurrentTaskScreenUrlDTO;
+import com.processautomation.camundapoc.models.*;
 import com.processautomation.camundapoc.payload.InitiationRequest;
 import com.processautomation.camundapoc.payload.MessageResponse;
+import com.processautomation.camundapoc.repositories.BPMNInstanceRepository;
+import com.processautomation.camundapoc.repositories.BPMNUsersAssociationRepository;
+import com.processautomation.camundapoc.repositories.UserRepository;
 import com.processautomation.camundapoc.services.CamundaService;
 import io.camunda.operate.exception.OperateException;
 import io.camunda.tasklist.exception.TaskListException;
@@ -28,6 +29,12 @@ public class CamundaPOCController {
     private final static Logger LOG = LoggerFactory.getLogger(CamundaPocApplication.class);
     @Autowired
     CamundaService camundaService;
+    @Autowired
+    BPMNInstanceRepository bpmnInstanceRepository;
+    @Autowired
+    UserRepository userRepository;
+    @Autowired
+    BPMNUsersAssociationRepository bpmnUsersAssociationRepository;
     @PatchMapping("/completeProcessInstance")
     @PreAuthorize("hasRole('USER') or hasRole('MODERATOR')")
     public ResponseEntity<?> completeProcessInstance(@Valid @RequestBody CompleteBpmnInstanceRequest completeBpmnInstanceRequest) throws TaskListException, OperateException {
@@ -38,6 +45,21 @@ public class CamundaPOCController {
     @PreAuthorize("hasRole('USER') or hasRole('MODERATOR')")
     public ResponseEntity<?> initiateEnrollment(@Valid @RequestBody InitiationRequest initiationRequest){
         ProcessInstanceEvent event = camundaService.initiateBpmnInstance(initiationRequest);
+        var loggedInUserWrapper = new Object(){ User loggedInUser ;};
+        userRepository.findByUsername(((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername()).ifPresent(user -> loggedInUserWrapper.loggedInUser=user);
+        if(loggedInUserWrapper.loggedInUser.getBpmnUsersAssociations()==null){
+            BPMNProcessInstance bpmnProcessInstance =new BPMNProcessInstance(event.getBpmnProcessId(),event.getProcessInstanceKey());
+            BPMNProcessInstance persistedInstance = bpmnInstanceRepository.save(bpmnProcessInstance);
+            bpmnUsersAssociationRepository.save(new BPMNUsersAssociation(loggedInUserWrapper.loggedInUser,persistedInstance));
+
+        }
+        else {
+            BPMNProcessInstance bpmnProcessInstance =new BPMNProcessInstance(event.getBpmnProcessId(),event.getProcessInstanceKey());
+            BPMNProcessInstance persistedInstance = bpmnInstanceRepository.save(bpmnProcessInstance);
+            bpmnUsersAssociationRepository.save(new BPMNUsersAssociation(loggedInUserWrapper.loggedInUser,persistedInstance));
+        }
+        userRepository.save(loggedInUserWrapper.loggedInUser);
+
                 LOG.info("Started instance for processDefinitionKey='{}', bpmnProcessId='{}', version='{}' with processInstanceKey='{}'",
                 event.getProcessDefinitionKey(), event.getBpmnProcessId(), event.getVersion(), event.getProcessInstanceKey());
            return ResponseEntity.ok(new MessageResponse("Process Has Been Instantiated"));

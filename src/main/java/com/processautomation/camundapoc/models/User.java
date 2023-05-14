@@ -31,6 +31,8 @@ public class User {
     @JoinTable(name="user_roles",joinColumns=@JoinColumn(name="user_id"),
     inverseJoinColumns= @JoinColumn(name="role_id"))
     private Set<Role> roles = new HashSet<>();
+    @OneToMany(mappedBy = "user")
+    Set<BPMNUsersAssociation> bpmnUsersAssociations;
     public User(){
 
     }
@@ -39,6 +41,18 @@ public class User {
         this.email=email;
         this.password=password;
     }
+
+    public Set<BPMNUsersAssociation> getBpmnUsersAssociations() {
+        return bpmnUsersAssociations;
+    }
+
+    public void setBpmnUsersAssociations(Set<BPMNUsersAssociation> bpmnUsersAssociations) {
+        this.bpmnUsersAssociations = bpmnUsersAssociations;
+    }
+    public void addAssociations(BPMNUsersAssociation association){
+        this.bpmnUsersAssociations.add(association);
+    }
+
     public Long getId(){
         return id;
     }
