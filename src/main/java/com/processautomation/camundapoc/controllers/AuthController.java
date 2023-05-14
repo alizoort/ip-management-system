@@ -14,13 +14,16 @@ import com.processautomation.camundapoc.security.services.UserDetailsImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -117,5 +120,15 @@ public class AuthController {
         userRepository.save(user);
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+    }
+    @GetMapping("/loggedInUser")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> loggedInUser(){
+        UserDetails loggedInUser = ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        return ResponseEntity.ok(
+                new HashMap<Object,Object>(){{
+                    put("username",loggedInUser.getUsername());
+                }}
+        );
     }
 }

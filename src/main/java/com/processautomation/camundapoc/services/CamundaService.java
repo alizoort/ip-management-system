@@ -46,16 +46,23 @@ public class CamundaService {
         CamundaTaskListClient tasklistClient = new CamundaTaskListClient.Builder().taskListUrl("http://localhost:8082").shouldReturnVariables().authentication(selfManagedAuthentication).build();
         CamundaOperateClient operateClient = new CamundaOperateClient.Builder().authentication(new io.camunda.operate.auth.SelfManagedAuthentication().clientId(env.getProperty("ipManagementSystem.app.clientId")).clientSecret(env.getProperty("ipManagementSystem.app.clientSecret")))
                 .operateUrl("http://localhost:8081/").build();
-        ProcessInstanceFilter instanceFilter = new ProcessInstanceFilter.Builder().bpmnProcessId("IPManagementBusinessProcess").state(ProcessInstanceState.ACTIVE).build();
+        ProcessInstanceFilter instanceFilter = new ProcessInstanceFilter.Builder().bpmnProcessId(currentScreen.bpmnProcessId).state(ProcessInstanceState.ACTIVE).build();
         SearchQuery instanceQuery = new SearchQuery.Builder().filter(instanceFilter).size(20).build();
         List<ProcessInstance> list = operateClient.searchProcessInstances(instanceQuery);
-        ProcessInstance processInstance = list.get(0);
-        VariableFilter variableFilter = new VariableFilter.Builder().processInstanceKey(processInstance.getKey()).build();
-        SearchQuery varQuery = new SearchQuery.Builder().filter(variableFilter).size(20).build();
-        List<io.camunda.operate.dto.Variable> variables = operateClient.searchVariables(varQuery);
-        var wrapper = new Object(){ String currentUrl = "";};
-        variables.stream().filter(variable-> variable.getName().equals("currentScreenUrl")).findFirst().ifPresent(variable -> wrapper.currentUrl =variable.getValue());
-        return new GetCurrentTaskScreenResponseDTO(wrapper.currentUrl,taskScreenAssociation.get(wrapper.currentUrl.substring(1,wrapper.currentUrl.length()-1)));
+        for(ProcessInstance processElement : list){
+            VariableFilter variableFilter = new VariableFilter.Builder().processInstanceKey(processElement.getKey()).build();
+            SearchQuery varQuery = new SearchQuery.Builder().filter(variableFilter).size(20).build();
+            List<io.camunda.operate.dto.Variable> variables = operateClient.searchVariables(varQuery);
+            io.camunda.operate.dto.Variable searchedVariable = new io.camunda.operate.dto.Variable();
+            searchedVariable.setName("assignedBusinessUser");
+            searchedVariable.setValue(currentScreen.username);
+            if(variables.stream().filter( item-> item.getName().equals("assignedBusinessUser") && item.getValue().substring(1,item.getValue().length()-1).equals(currentScreen.username)).toList().size()>0){
+                var wrapper = new Object(){ String currentUrl = "";};
+                variables.stream().filter(variable-> variable.getName().equals("currentScreenUrl")).findFirst().ifPresent(variable -> wrapper.currentUrl =variable.getValue());
+                return new GetCurrentTaskScreenResponseDTO(wrapper.currentUrl,taskScreenAssociation.get(wrapper.currentUrl.substring(1,wrapper.currentUrl.length()-1)));
+            }
+        }
+        throw new TaskListException();
     }
     //Create a method that takes bpmn and username and gives -> the current camunda screen (This should be put insde redirection variable)
     public void completeBpmnInstance(CompleteBpmnInstanceRequest completeRequest) throws TaskListException , OperateException {
@@ -63,7 +70,7 @@ public class CamundaService {
         CamundaTaskListClient tasklistClient = new CamundaTaskListClient.Builder().taskListUrl("http://localhost:8082").shouldReturnVariables().authentication(selfManagedAuthentication).build();
         CamundaOperateClient operateClient = new CamundaOperateClient.Builder().authentication(new io.camunda.operate.auth.SelfManagedAuthentication().clientId(env.getProperty("ipManagementSystem.app.clientId")).clientSecret(env.getProperty("ipManagementSystem.app.clientSecret")))
                 .operateUrl("http://localhost:8081/").build();
-        ProcessInstanceFilter instanceFilter = new ProcessInstanceFilter.Builder().bpmnProcessId("IPManagementBusinessProcess").state(ProcessInstanceState.ACTIVE).build();
+        ProcessInstanceFilter instanceFilter = new ProcessInstanceFilter.Builder().bpmnProcessId(completeRequest.bpmnProcessId).state(ProcessInstanceState.ACTIVE).build();
         SearchQuery instanceQuery = new SearchQuery.Builder().filter(instanceFilter).size(20).build();
         //key = currentTask -> val = url of the next screen
         List<ProcessInstance> list = operateClient.searchProcessInstances(instanceQuery);
