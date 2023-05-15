@@ -1,5 +1,6 @@
 package com.processautomation.camundapoc.services;
 
+import com.processautomation.camundapoc.bpmn_module.beans.FileReader;
 import com.processautomation.camundapoc.models.*;
 import com.processautomation.camundapoc.payload.InitiationRequest;
 import com.processautomation.camundapoc.repositories.BPMNUsersAssociationRepository;
@@ -24,10 +25,8 @@ import java.util.List;
 public class CamundaService {
     @Autowired
     private ZeebeClientLifecycle client;
-    HashMap<String,String> taskScreenAssociation = new HashMap<String,String>(){{
-        put("FillPersonnelInfo","https://pabudtywntpghop.form.io/ipsimpleform");
-        put("FillNativeInformation","https://pabudtywntpghop.form.io/nativeinformation");
-    }};
+    @Autowired
+    private FileReader taskScreenAssociation;
     @Autowired
     private Environment env;
     @Autowired
@@ -53,7 +52,7 @@ public class CamundaService {
         SelfManagedAuthentication selfManagedAuthentication = new SelfManagedAuthentication(env.getProperty("ipManagementSystem.app.clientId"),env.getProperty("ipManagementSystem.app.clientSecret"));
         CamundaTaskListClient tasklistClient = new CamundaTaskListClient.Builder().taskListUrl("http://localhost:8082").shouldReturnVariables().authentication(selfManagedAuthentication).build();
         Task currentTask = findCurrentTask(tasklistClient,currentScreen.bpmnProcessId);
-        return new GetCurrentTaskScreenResponseDTO(taskScreenAssociation.get(currentTask.getTaskDefinitionId()), currentTask.getTaskDefinitionId());
+        return new GetCurrentTaskScreenResponseDTO((String) taskScreenAssociation.map.get(currentTask.getTaskDefinitionId()), currentTask.getTaskDefinitionId());
     }
     //Create a method that takes bpmn and username and gives -> the current camunda screen (This should be put insde redirection variable)
     public void completeBpmnInstance(CompleteBpmnInstanceRequest completeRequest) throws TaskListException , OperateException {
